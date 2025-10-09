@@ -59,6 +59,8 @@ from .block import (
     ResNetLayer,
     SCDown,
     TorchVision,
+    ECA,
+    CoordAtt
 )
 from .conv import (
     CBAM,
@@ -179,4 +181,6 @@ __all__ = (
     "TorchVision",
     "Index",
     "A2C2f",
+    "ECA",
+    "CoordAtt"
 )
