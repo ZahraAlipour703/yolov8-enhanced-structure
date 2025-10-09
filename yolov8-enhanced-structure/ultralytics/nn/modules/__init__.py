@@ -60,7 +60,7 @@ from .block import (
     SCDown,
     TorchVision,
     ECA,
-    CoordAtt
+    CoordAtt,
 )
 from .conv import (
     CBAM,
@@ -182,5 +182,5 @@ __all__ = (
     "Index",
     "A2C2f",
     "ECA",
-    "CoordAtt"
+    "CoordAtt",
 )
