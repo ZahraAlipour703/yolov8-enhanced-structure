@@ -1,0 +1,3 @@
+[submodule "ultralytics_core"]
+	path = ultralytics_core
+	url = https://github.com/ultralytics/ultralytics.git
