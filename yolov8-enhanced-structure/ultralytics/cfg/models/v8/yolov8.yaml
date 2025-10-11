@@ -52,4 +52,4 @@ head:
   #- [8, 1, MobileViTBlock, [128, 1, 4]]          # 23: add MobileViT at P4/16 output
 
   # Final Detect head on multi-scale features
-  - [[16, 19, 22, 23], 1, Detect, [nc]]              # 24
+  - [[16, 19, 22], 1, Detect, [nc]]              # 24
