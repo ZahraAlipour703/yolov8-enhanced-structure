@@ -1,9 +1,9 @@
 # ultra_nano_detect_fixed_fusion.yaml
 # Custom nano YOLO variant with DWConv, ECA, CoordAtt, MobileViT, and fixed PAN fusion
 
-task: detect
+
 nc: 1
-scale: "s"  # small (~5 GFLOPs)
+scale: "n"  # small (~5 GFLOPs)
 
 # --------------------------
 # Backbone (depth=1, width×0.5 everywhere)
