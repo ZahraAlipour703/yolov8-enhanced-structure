@@ -1,40 +1,49 @@
-# YOLOv8n with ECA and CoordAtt (lightweight, correct dimension)
-# Compatible with Ultralytics 8.x
+# Ultralytics YOLOv8n with ECA and CoordAtt modules (lightweight)
+# Author: Zhra & ChatGPT
+# License: AGPL-3.0
+# Description: YOLOv8n backbone and head enhanced with ECA and CoordAtt attention modules.
 
-nc: 1  # number of classes
+nc: 80  # number of classes
 
+scales:
+  n: [0.33, 0.25, 1024]
+
+# ========================
 # Backbone
+# ========================
 backbone:
   # [from, repeats, module, args]
-  - [-1, 1, Conv, [64, 3, 2]]          # 0-P1/2
-  - [-1, 1, Conv, [128, 3, 2]]         # 1-P2/4
-  - [-1, 1, ECA, [128]]                # 🔹 ECA after Conv
-  - [-1, 3, C2f, [128, True]]          # 3
-  - [-1, 1, Conv, [256, 3, 2]]         # 4-P3/8
-  - [-1, 1, CoordAtt, [256]]           # 🔹 CoordAtt after downsample
-  - [-1, 6, C2f, [256, True]]          # 6
-  - [-1, 1, Conv, [512, 3, 2]]         # 7-P4/16
-  - [-1, 6, C2f, [512, True]]          # 8
-  - [-1, 1, Conv, [1024, 3, 2]]        # 9-P5/32
-  - [-1, 3, C2f, [1024, True]]         # 10
-  - [-1, 1, SPPF, [1024, 5]]           # 11
+  - [-1, 1, Conv, [16, 3, 2]]          # 0-P1/2
+  - [-1, 1, Conv, [32, 3, 2]]          # 1-P2/4
+  - [-1, 1, ECA, [32]]                 # ECA after early conv
+  - [-1, 3, C2f, [32, True]]           # 2-C2f block
+  - [-1, 1, Conv, [64, 3, 2]]          # 3-P3/8
+  - [-1, 1, CoordAtt, [64]]            # CoordAtt attention
+  - [-1, 6, C2f, [64, True]]
+  - [-1, 1, Conv, [128, 3, 2]]         # 5-P4/16
+  - [-1, 6, C2f, [128, True]]
+  - [-1, 1, Conv, [256, 3, 2]]         # 7-P5/32
+  - [-1, 3, C2f, [256, True]]
+  - [-1, 1, SPPF, [256, 5]]            # 9-SPPF output
 
+# ========================
 # Head
+# ========================
 head:
-  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 12
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # upsample P5->P4
   - [[-1, 8], 1, Concat, [1]]                  # cat backbone P4
-  - [-1, 3, C2f, [512]]                        # 14
+  - [-1, 3, C2f, [128]]                        # 12
 
-  - [-1, 1, nn.Upsample, [None, 2, "nearest"]] # 15
-  - [[-1, 6], 1, Concat, [1]]                  # cat backbone P3
-  - [-1, 3, C2f, [256]]                        # 17 (P3/8-small)
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # upsample P4->P3
+  - [[-1, 5], 1, Concat, [1]]                   # cat backbone P3
+  - [-1, 3, C2f, [64]]                          # 15 (P3/8 small)
 
-  - [-1, 1, Conv, [256, 3, 2]]                 # 18
-  - [[-1, 14], 1, Concat, [1]]                 # cat head P4
-  - [-1, 3, C2f, [512]]                        # 20 (P4/16-medium)
+  - [-1, 1, Conv, [64, 3, 2]]                   # downsample
+  - [[-1, 12], 1, Concat, [1]]                  # cat head P4
+  - [-1, 3, C2f, [128]]                         # 18 (P4/16 medium)
 
-  - [-1, 1, Conv, [512, 3, 2]]                 # 21
-  - [[-1, 11], 1, Concat, [1]]                 # cat head P5
-  - [-1, 3, C2f, [1024]]                       # 23 (P5/32-large)
+  - [-1, 1, Conv, [128, 3, 2]]                  # downsample
+  - [[-1, 9], 1, Concat, [1]]                   # cat head P5
+  - [-1, 3, C2f, [256]]                         # 21 (P5/32 large)
 
-  - [[17, 20, 23], 1, Detect, [nc]]            # 24 Detect(P3, P4, P5)
+  - [[15, 18, 21], 1, Detect, [nc]]             # Detect(P3, P4, P5)
