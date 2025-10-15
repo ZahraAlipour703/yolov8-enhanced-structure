@@ -1,55 +1,45 @@
-# ultra_nano_detect_fixed_fusion.yaml
-# Custom nano YOLO variant with DWConv, ECA, CoordAtt, MobileViT, and fixed PAN fusion
+# ultra_nano_detect_fixed_fusion_noECA.yaml
+# Custom YOLO variant without ECA (for ablation)
 
 task: detect
 nc: 1
-scale: "s"  # small (~5 GFLOPs)
+scale: "s"
 
-# --------------------------
-# Backbone (depth=1, width×0.5 everywhere)
-# --------------------------
 backbone:
-  - [-1, 1, Conv,     [16, 3, 2]]     # 0: P1/2
-  - [-1, 1, DWConv,   [32, 3, 2]]     # 1: P2/4
-  #- [-1, 1, ECA,      [32]]           # 2: ECA after P2
-  - [-1, 1, C2f,      [32, True]]     # 3
+  - [-1, 1, Conv,     [16, 3, 2]]      # 0: P1/2
+  - [-1, 1, DWConv,   [32, 3, 2]]      # 1: P2/4
+  - [-1, 1, C2f,      [32, True]]      # 2
 
-  - [-1, 1, DWConv,   [64, 3, 2]]     # 4: P3/8
-  - [-1, 1, CoordAtt, [64]]           # 5
-  - [-1, 1, C2f,      [64, True]]     # 6
+  - [-1, 1, DWConv,   [64, 3, 2]]      # 3: P3/8
+  - [-1, 1, CoordAtt, [64]]            # 4
+  - [-1, 1, C2f,      [64, True]]      # 5
 
-  - [-1, 1, DWConv,   [128, 3, 2]]    # 7: P4/16
-  - [-1, 1, C2f,      [128, True]]    # 8
+  - [-1, 1, DWConv,   [128, 3, 2]]     # 6: P4/16
+  - [-1, 1, C2f,      [128, True]]     # 7
 
-  - [-1, 1, DWConv,   [256, 3, 2]]    # 9: P5/32
-  - [-1, 1, SPPF,     [256, 5]]       # 10
+  - [-1, 1, DWConv,   [256, 3, 2]]     # 8: P5/32
+  - [-1, 1, SPPF,     [256, 5]]        # 9
 
-# --------------------------
-# Neck + Head (top-down & bottom-up fusion)
-# --------------------------
 head:
   # P5 → P4 upsample & fusion
-  - [-1, 1, nn.Upsample, [None, 2, 'nearest']]   # 11
-  - [[11, 8], 1, Concat, [1]]                    # 12
-  - [-1, 1, C2f,         [128, True]]            # 13
+  - [-1, 1, nn.Upsample, [None, 2, 'nearest']]   # 10
+  - [[10, 7], 1, Concat, [1]]                    # 11
+  - [-1, 1, C2f,         [128, True]]            # 12
 
   # P4 → P3 upsample & fusion
-  - [-1, 1, nn.Upsample, [None, 2, 'nearest']]   # 14
-  - [[14, 6], 1, Concat, [1]]                    # 15
-  - [-1, 1, C2f,         [64, True]]             # 16 (P3/8 small)
+  - [-1, 1, nn.Upsample, [None, 2, 'nearest']]   # 13
+  - [[13, 5], 1, Concat, [1]]                    # 14
+  - [-1, 1, C2f,         [64, True]]             # 15 (P3/8 small)
 
   # P3 → P4 downsample & fusion
-  - [-1, 1, Conv,        [64, 3, 2]]             # 17
-  - [[17, 13], 1, Concat,[1]]                    # 18
-  - [-1, 1, C2f,         [128, True]]            # 19 (P4/16 medium)
+  - [-1, 1, Conv,        [64, 3, 2]]             # 16
+  - [[16, 12], 1, Concat,[1]]                    # 17
+  - [-1, 1, C2f,         [128, True]]            # 18 (P4/16 medium)
 
   # P4 → P5 downsample & fusion
-  - [-1, 1, Conv,        [128, 3, 2]]            # 20
-  - [[20, 10], 1, Concat,[1]]                    # 21
-  - [-1, 1, C2f,         [256, True]]            # 22 (P5/32 large)
+  - [-1, 1, Conv,        [128, 3, 2]]            # 19
+  - [[19, 9], 1, Concat, [1]]                    # 20
+  - [-1, 1, C2f,         [256, True]]            # 21 (P5/32 large)
 
-  # Optional micro-transformer for richer context at P4
-  #- [8, 1, MobileViTBlock, [128, 1, 4]]          # 23: add MobileViT at P4/16 output
-
-  # Final Detect head on multi-scale features
-  - [[16, 19, 22], 1, Detect, [nc]]              # 24
+  # Final detect
+  - [[15, 18, 21], 1, Detect, [nc]]              # 22
